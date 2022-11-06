@@ -1,39 +1,43 @@
 #!/bin/python
 
 import random
+from itertools import permutations
 
 MAX_VAL = 1000000
 STR_LEN = 10000
-'''
-kolejnosc: [liczba wystapien, prawdopodobienstwo] - tuple
-     a     b    c     d
-a   0.1   0.2  0.3   0.1
-b   0.2   0.1  0.2   0.1
-c   0.1   0.1  0.4   0.2
-d   0.0   0.2  0.1   0.3
-'''
 
-word_dict = {}
-letters_after = {}
+# 1 rzad
+first_dict = {}
+
+# 3 rzad
+third_dict = {}
+
+# 5 rzad
+fifth_dict = {}
 
 
-def init_dict():
-    global word_dict
-    global letters_after
+def init_dicts():
+    global first_dict
+    global third_dict
     letters = list(range(ord('a'), ord('z') + 1))
     letters.append(ord(' '))
     letters.extend(list(range(ord('0'), ord('9') + 1)))
 
     for letter in letters:
-        word_dict.setdefault(chr(letter), {})
-        letters_after[letter] = 1
-        for next in letters:
-            word_dict[chr(letter)][chr(next)] = 0
+        first_dict.setdefault(chr(letter), {})
+
+        for n1 in letters:
+            first_dict[chr(letter)][chr(n1)] = 0
+            for n2 in letters:
+                for n3 in letters:
+                    chars = "".join([chr(n1) + chr(n2) + chr(n3)])
+                    third_dict.setdefault(chars, {})[chr(letter)] = 0
 
 
-def get_prob(words):
-    global word_dict
-    global letters_after
+def get_first_probabilities(words):
+    global first_dict
+    global third_dict
+
     it = iter(words)
     item = next(it)
 
@@ -42,14 +46,30 @@ def get_prob(words):
         if next_item == '\0':
             break
 
-        # letters_after[item] += 1
-        after = letters_after.setdefault(item, 1)
-        after += 1 
-        prob = word_dict[item][next_item]
+        prob = first_dict[item][next_item]
         prob += 1
-        word_dict[item][next_item] = prob
+        first_dict[item][next_item] = prob
 
         item = next_item
+
+
+def get_third_probabilities(words):
+    global third_dict
+    it = iter(words)
+    items = [next(it), next(it), next(it)]
+
+    while True:
+        next_item = next(it, '\0')
+        if next_item == '\0':
+            break
+
+        threes = "".join(items)
+        third_dict[threes][next_item] += 1
+
+        print(threes, next_item)
+
+        items = items[1:] 
+        items.append(next_item)
 
 
 def countLetters(words):
@@ -64,55 +84,62 @@ def countLetters(words):
                 letters[letter] += 1
 
     # bez spacji
-    #print("Średnia liczba znaków na słowo:", letter_count / len(words))
+    print("Średnia liczba znaków na słowo:", letter_count / len(words))
 
     # ze spacjami
     letter_count += len(words)
     for key in letters:
         letters[key] /= letter_count
     letters[' '] = len(words) / letter_count
-    '''
-    for key in letters:
-        print(key, letters[key])
-    '''
     return letters
 
 
 file = open("norm_wiki_sample.txt", "r")
-global_words = []
+#global_words = []
 global_string = ""
 
 for line in file:
-    global_words = line.split(' ')
+    #global_words = line.split(' ')
     global_string = line
 
-global_words = global_words[0:MAX_VAL]
+#global_words = global_words[0:MAX_VAL]
 global_string = global_string[0:MAX_VAL]
 
-letters = countLetters(global_words)
+#letters = countLetters(global_words)
 
-init_dict()
-get_prob(global_string)
+init_dicts()
+get_first_probabilities(global_string)
+get_third_probabilities(global_string)
 
-generated = "probability"
+first = "probability"
+third = "probability"
+fifth = "probability"
+
 # ostatni znak
-prev = generated[-1] 
+prev = first[-1] 
 new_char = ' '
 
+'''
+# wygenerowany znak 1 stopnia
 for i in range(0, STR_LEN):
-    # wygenerowany znak 1 stopnia
-    prob_char   = list(word_dict[prev].keys())
-    prob_val    = list(word_dict[prev].values())
+    prob_char   = list(first_dict[prev].keys())
+    prob_val    = list(first_dict[prev].values())
     [new_char]  = random.choices(prob_char, prob_val) 
-    generated += "".join(new_char)
+    first += "".join(new_char)
     prev = new_char
-print(generated)
+print(first)
+countLetters(first.split(' '))
+# Średnia liczba znaków na słowo (przybliżenie 1 rzędu): 4.896348645465253
+'''
 
-'''
-generated = ""
-for i in range(0, MAX_VAL):
-    generated += "".join(random.choices(list(letters.keys()),
-                                        list(letters.values())))
-print(generated)
-# countLetters(generated.split(' '))
-'''
+prev = "".join(third[-3:])
+# wygenerowany znak 3 stopnia
+for i in range(0, STR_LEN):
+    prob_char   = list(third_dict[prev].keys())
+    prob_val    = list(third_dict[prev].values())
+    [new_char]  = random.choices(prob_char, prob_val) 
+    third += "".join(new_char)
+    prev = prev[-2:] + new_char
+print(third)
+
+countLetters(third.split(' '))
