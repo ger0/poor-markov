@@ -3,7 +3,7 @@
 import random
 from itertools import permutations
 
-MAX_VAL = 1000000
+MAX_VAL = 100000000
 STR_LEN = 10000
 
 # 1 rzad
@@ -54,7 +54,7 @@ def get_first_probabilities(words):
         item = next_item
 
 
-def get_probabilities(words, degree = 1):
+def get_probabilities(words, degree, dict):
     global first_dict
     global third_dict
     global fifth_dict
@@ -70,20 +70,21 @@ def get_probabilities(words, degree = 1):
             break
 
         chars = "".join(items)
-        if degree == 3:
-            dict = third_dict
-        elif degree == 5:
-            dict = fifth_dict
-        else:
-            dict = first_dict
 
-        dict[chars][next_item] += 1
+        if chars in dict:
+            if next_item in dict[chars]:
+                dict[chars][next_item] += 1
+            else:
+                dict.setdefault(chars, {})[next_item] = 1
+
+        else:
+            dict.setdefault(chars, {})[next_item] = 1
 
         items = items[1:] 
         items.append(next_item)
 
 
-def countLetters(words):
+def countLetters(words, msg = ''):
     letter_count = 0
     letters = {}
     for i in words:
@@ -95,7 +96,7 @@ def countLetters(words):
                 letters[letter] += 1
 
     # bez spacji
-    print("Średnia liczba znaków na słowo:", letter_count / len(words))
+    print(msg + "Średnia liczba znaków na słowo:", letter_count / len(words))
 
     # ze spacjami
     letter_count += len(words)
@@ -103,6 +104,28 @@ def countLetters(words):
         letters[key] /= letter_count
     letters[' '] = len(words) / letter_count
     return letters
+
+def get_results(degree):
+    new_char = ' '
+    result = "probability"
+    prev = "".join(result[-degree:])
+    if degree == 3:
+        dict = third_dict
+    elif degree == 5:
+        dict = fifth_dict
+    else:
+        dict = first_dict
+
+    # wygenerowany znak stopnia
+    for _ in range(0, STR_LEN):
+        if prev in dict:
+            prob_char   = list(dict[prev].keys())
+            prob_val    = list(dict[prev].values())
+            [new_char]  = random.choices(prob_char, prob_val) 
+            result += "".join(new_char)
+            prev = (prev[-(degree - 1):] + new_char) if degree != 1 else new_char
+    countLetters(result.split(' '), str(degree))
+    return result
 
 
 file = open("norm_wiki_sample.txt", "r")
@@ -119,50 +142,16 @@ global_string = global_string[0:MAX_VAL]
 #letters = countLetters(global_words)
 
 init_dicts()
-#get_probabilities(global_string, 1)
-get_probabilities(global_string, 3)
-#get_probabilities(global_string, 5)
+get_probabilities(global_string, 1, first_dict)
+get_probabilities(global_string, 3, third_dict)
+get_probabilities(global_string, 5, fifth_dict)
 
-first = "probability"
-third = "probability"
-fifth = "probability"
+# Średnia liczba znaków na słowo (przybliżenie 1 rzędu): 4.9916217833632555
+# Średnia liczba znaków na słowo (przybliżenie 3 rzędu): 4.906784660766962
+# Średnia liczba znaków na słowo: 4.945368171021378
 
-# ostatni znak
-prev = first[-1] 
-new_char = ' '
-
-'''
-# wygenerowany znak 1 stopnia
-for i in range(0, STR_LEN):
-    prob_char   = list(first_dict[prev].keys())
-    prob_val    = list(first_dict[prev].values())
-    [new_char]  = random.choices(prob_char, prob_val) 
-    first += "".join(new_char)
-    prev = new_char
-print(first)
-countLetters(first.split(' '))
-# Średnia liczba znaków na słowo (przybliżenie 1 rzędu): 4.896348645465253
-
-prev = "".join(third[-3:])
-# wygenerowany znak 3 stopnia
-for i in range(0, STR_LEN):
-    prob_char   = list(third_dict[prev].keys())
-    prob_val    = list(third_dict[prev].values())
-    [new_char]  = random.choices(prob_char, prob_val) 
-    third += "".join(new_char)
-    prev = prev[-2:] + new_char
-print(third)
-# Średnia liczba znaków na słowo (przybliżenie 3 rzędu): 4.678956324446966
-'''
-
-prev = "".join(third[-5:])
-# wygenerowany znak 5 stopnia
-for i in range(0, STR_LEN):
-    prob_char   = list(third_dict[prev].keys())
-    prob_val    = list(third_dict[prev].values())
-    [new_char]  = random.choices(prob_char, prob_val) 
-    fifth += "".join(new_char)
-    prev = prev[-4:] + new_char
-print(fifth)
-
-countLetters(fifth.split(' '))
+for deg in [1, 3, 5]:
+    res = get_results(deg)
+    
+    if deg == 5:
+        print(res)
