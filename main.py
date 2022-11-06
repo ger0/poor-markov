@@ -2,7 +2,8 @@
 
 import random
 
-MAX_VAL = 10000
+MAX_VAL = 1000000
+STR_LEN = 10000
 '''
 kolejnosc: [liczba wystapien, prawdopodobienstwo] - tuple
      a     b    c     d
@@ -17,16 +18,22 @@ letters_after = {}
 
 
 def init_dict():
+    global word_dict
+    global letters_after
     letters = list(range(ord('a'), ord('z') + 1))
     letters.append(ord(' '))
     letters.extend(list(range(ord('0'), ord('9') + 1)))
+
     for letter in letters:
+        word_dict.setdefault(chr(letter), {})
         letters_after[letter] = 1
         for next in letters:
-            word_dict.setdefault(chr(letter), {})[chr(next)] = [0, 0.0]
+            word_dict[chr(letter)][chr(next)] = 0
 
 
 def get_prob(words):
+    global word_dict
+    global letters_after
     it = iter(words)
     item = next(it)
 
@@ -37,13 +44,12 @@ def get_prob(words):
 
         # letters_after[item] += 1
         after = letters_after.setdefault(item, 1)
-        after += 1
-        print(item, next_item)
-        print(word_dict[item][next_item])
+        after += 1 
         prob = word_dict[item][next_item]
+        prob += 1
+        word_dict[item][next_item] = prob
 
-        prob[0] += 1
-        prob[1] = prob[0] / letters_after[item]
+        item = next_item
 
 
 def countLetters(words):
@@ -58,15 +64,17 @@ def countLetters(words):
                 letters[letter] += 1
 
     # bez spacji
-    print("Średnia liczba znaków na słowo:", letter_count / len(words))
+    #print("Średnia liczba znaków na słowo:", letter_count / len(words))
 
     # ze spacjami
     letter_count += len(words)
     for key in letters:
         letters[key] /= letter_count
     letters[' '] = len(words) / letter_count
+    '''
     for key in letters:
         print(key, letters[key])
+    '''
     return letters
 
 
@@ -86,10 +94,19 @@ letters = countLetters(global_words)
 init_dict()
 get_prob(global_string)
 
-generated = ""
-prev = ''
-for i in range(0, MAX_VAL):
-    generated += "".join(random.choices)
+generated = "probability"
+# ostatni znak
+prev = generated[-1] 
+new_char = ' '
+
+for i in range(0, STR_LEN):
+    # wygenerowany znak 1 stopnia
+    prob_char   = list(word_dict[prev].keys())
+    prob_val    = list(word_dict[prev].values())
+    [new_char]  = random.choices(prob_char, prob_val) 
+    generated += "".join(new_char)
+    prev = new_char
+print(generated)
 
 '''
 generated = ""
