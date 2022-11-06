@@ -1,58 +1,16 @@
 #!/bin/python
 
 import random
-from itertools import permutations
 
 MAX_VAL = 100000000
 STR_LEN = 10000
 
 # 1 rzad
 first_dict = {}
-
 # 3 rzad
 third_dict = {}
-
 # 5 rzad
 fifth_dict = {}
-
-
-def init_dicts():
-    global first_dict
-    global third_dict
-    global fifth_dict
-
-    letters = list(range(ord('a'), ord('z') + 1))
-    letters.append(ord(' '))
-    letters.extend(list(range(ord('0'), ord('9') + 1)))
-
-    for letter in letters:
-        first_dict.setdefault(chr(letter), {})
-
-        for n1 in letters:
-            first_dict[chr(letter)][chr(n1)] = 0
-            for n2 in letters:
-                for n3 in letters:
-                    chars = "".join([chr(n1) + chr(n2) + chr(n3)])
-                    third_dict.setdefault(chars, {})[chr(letter)] = 0
-
-
-def get_first_probabilities(words):
-    global first_dict
-
-    it = iter(words)
-    item = next(it)
-
-    while True:
-        next_item = next(it, '\0')
-        if next_item == '\0':
-            break
-
-        prob = first_dict[item][next_item]
-        prob += 1
-        first_dict[item][next_item] = prob
-
-        item = next_item
-
 
 def get_probabilities(words, degree, dict):
     global first_dict
@@ -60,7 +18,6 @@ def get_probabilities(words, degree, dict):
     global fifth_dict
     it = iter(words)
     items = []
-    #items = [next(it), next(it), next(it)]
     for _ in range(degree):
         items.append(next(it))
 
@@ -129,19 +86,13 @@ def get_results(degree):
 
 
 file = open("norm_wiki_sample.txt", "r")
-#global_words = []
 global_string = ""
 
 for line in file:
-    #global_words = line.split(' ')
     global_string = line
 
-#global_words = global_words[0:MAX_VAL]
 global_string = global_string[0:MAX_VAL]
 
-#letters = countLetters(global_words)
-
-init_dicts()
 get_probabilities(global_string, 1, first_dict)
 get_probabilities(global_string, 3, third_dict)
 get_probabilities(global_string, 5, fifth_dict)
@@ -152,6 +103,5 @@ get_probabilities(global_string, 5, fifth_dict)
 
 for deg in [1, 3, 5]:
     res = get_results(deg)
-    
     if deg == 5:
         print(res)
